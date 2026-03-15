@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WP-MCP Server Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <h1>WP-MCP Server</h1>
+                </div>
+                <div class="status-indicator connected" id="connection-status">
+                    <div class="pulse"></div>
+                    <span>Connected</span>
+                </div>
+            </div>
+
+            <div class="sidebar-content">
+                <div class="stats-card">
+                    <h3>Total Requests</h3>
+                    <div class="stat-value" id="total-requests">0</div>
+                </div>
+                
+                <div class="tools-list-container">
+                    <h3>Recent Tools</h3>
+                    <ul class="tools-list" id="recent-tools-list">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <p>Port: 5174 | Standard IO</p>
+                <button class="clear-btn" id="clear-logs-btn">Clear Logs</button>
+            </div>
+        </aside>
+
+        <!-- Main Content (Activity Feed) -->
+        <main class="main-content">
+            <header class="main-header">
+                <h2>Live Activity Feed</h2>
+                <div class="filter-controls">
+                    <input type="text" id="search-logs" placeholder="Search logs..." class="search-input">
+                </div>
+            </header>
+            
+            <div class="activity-feed" id="activity-feed">
+                <!-- Log entries will be prepended here -->
+                <div class="empty-state" id="empty-state">
+                    <span class="empty-icon">📡</span>
+                    <p>Waiting for MCP tool calls...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Socket.io connection -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
