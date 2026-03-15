@@ -38,6 +38,38 @@ import { listAgentSkills, getAgentSkill } from "./lib/agent-skills.js";
 import { generateWpAction } from "./lib/wp-actions.js";
 import { wpGetPost, wpGetPosts, wpGetSettings, wpGetUsers, wpWooOrders, wpWooProducts, wpGetTerms, wpGetPostTypes, wpGetTaxonomies } from "./lib/wp-data.js";
 
+// New WP-AGENT Ultimate features
+import {
+  getGutenbergScaffold,
+  getElementorScaffold,
+  getDiviScaffold,
+  getWPBakeryScaffold,
+  getEditorComparison,
+  getBuilderCSSVariables
+} from "./lib/multi-editor.js";
+import {
+  getSubscriptionsGuide,
+  getMultiVendorGuide,
+  getProductAddonsGuide,
+  getImportExportGuide,
+  getHPOSGuide
+} from "./lib/woocommerce-enterprise.js";
+import {
+  extractFigmaTokens,
+  figmaToCSS,
+  generateThemeJson,
+  generateBlockFromFigma,
+  generateCSSVariables,
+  detectComponentType
+} from "./lib/figma-to-code.js";
+import {
+  getPhpUnitConfig,
+  getPestConfig,
+  getWPMockSetup,
+  getPlaywrightSetup,
+  getGitHubActionsWorkflow
+} from "./lib/testing-tools.js";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MCP SERVER & DASHBOARD INITIALIZATION
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,7 +84,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/trigger", (req, res) => {
   const requestId = Math.random().toString(36).substring(2, 11);
   const startTime = Date.now();
-  
+
   io.emit("tool_call", {
     id: requestId,
     name: "mocked_search_knowledge",
@@ -346,6 +378,172 @@ const TOOLS = [
     name: "wp_get_taxonomies",
     description: "Read all registered taxonomies.",
     inputSchema: { type: "object", properties: {} },
+  },
+
+  // 8. Multi-Editor Switchboard
+  {
+    name: "get_gutenberg_scaffold",
+    description: "Generate Gutenberg block scaffold with block.json v3.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        blockName: { type: "string", description: "Block name (e.g., 'hero-section')" },
+        namespace: { type: "string", description: "Block namespace", default: "wp-agent" },
+        category: { type: "string", description: "Block category", default: "widgets" }
+      },
+      required: ["blockName"]
+    },
+  },
+  {
+    name: "get_elementor_scaffold",
+    description: "Generate Elementor widget scaffold extending Widget_Base.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        widgetName: { type: "string", description: "Widget name (e.g., 'price-table')" },
+        category: { type: "string", description: "Elementor category", default: "general" }
+      },
+      required: ["widgetName"]
+    },
+  },
+  {
+    name: "get_divi_scaffold",
+    description: "Generate Divi module scaffold extending ET_Builder_Module.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        moduleName: { type: "string", description: "Module name (e.g., 'testimonial')" }
+      },
+      required: ["moduleName"]
+    },
+  },
+  {
+    name: "get_wpbakery_scaffold",
+    description: "Generate WPBakery shortcode scaffold with vc_map.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        shortcodeName: { type: "string", description: "Shortcode name (e.g., 'feature-box')" }
+      },
+      required: ["shortcodeName"]
+    },
+  },
+  {
+    name: "get_editor_comparison",
+    description: "Get comparison table of Gutenberg, Elementor, Divi, and WPBakery.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_builder_css_vars",
+    description: "Get CSS custom properties for a specific page builder.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        builder: { type: "string", description: "Builder name (elementor, divi, gutenberg)", enum: ["elementor", "divi", "gutenberg"] }
+      },
+      required: ["builder"]
+    },
+  },
+
+  // 9. WooCommerce Enterprise
+  {
+    name: "get_subscriptions_guide",
+    description: "Get WooCommerce Subscriptions integration guide with hooks and examples.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_multivendor_guide",
+    description: "Get Multi-Vendor (Dokan/WCFM) integration guide with commission handling.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_product_addons_guide",
+    description: "Get WooCommerce Product Add-ons implementation with cart item data.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_import_export_guide",
+    description: "Get WooCommerce Import/Export guide with batch processing.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_hpos_guide",
+    description: "Get HPOS (High-Performance Order Storage) compatibility guide.",
+    inputSchema: { type: "object", properties: {} },
+  },
+
+  // 10. Figma-to-Code Engine
+  {
+    name: "extract_figma_tokens",
+    description: "Extract design tokens (colors, typography, spacing) from Figma data.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        figmaData: { type: "object", description: "Figma design data JSON" }
+      },
+      required: ["figmaData"]
+    },
+  },
+  {
+    name: "generate_theme_json",
+    description: "Generate WordPress theme.json from Figma design tokens.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        tokens: { type: "object", description: "Design tokens object" }
+      },
+      required: ["tokens"]
+    },
+  },
+  {
+    name: "generate_block_from_figma",
+    description: "Generate Gutenberg block code from Figma component.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        figmaComponent: { type: "object", description: "Figma component data" },
+        blockName: { type: "string", description: "Block name" }
+      },
+      required: ["figmaComponent", "blockName"]
+    },
+  },
+  {
+    name: "detect_component_type",
+    description: "Detect WordPress block type from Figma component.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        figmaNode: { type: "object", description: "Figma node data" }
+      },
+      required: ["figmaNode"]
+    },
+  },
+
+  // 11. Testing & CI/CD
+  {
+    name: "get_phpunit_config",
+    description: "Get PHPUnit configuration for WordPress plugin testing.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_pest_config",
+    description: "Get Pest PHP testing configuration with examples.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_wpmock_setup",
+    description: "Get WP_Mock setup and example unit tests.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_playwright_setup",
+    description: "Get Playwright E2E testing setup for WordPress.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_github_actions_workflow",
+    description: "Get GitHub Actions CI/CD workflow for WordPress plugin.",
+    inputSchema: { type: "object", properties: {} },
   }
 ];
 
@@ -478,30 +676,94 @@ async function executeTool(name, args) {
       // 7. Live WordPress Data
       case "wp_get_posts":
         return jsonResponse(await wpGetPosts(args.postType, args.count, args.search));
-        
+
       case "wp_get_post":
         return jsonResponse(await wpGetPost(args.id));
-        
+
       case "wp_get_users":
         return jsonResponse(await wpGetUsers(args.role, args.count, args.search));
-        
+
       case "wp_get_settings":
         return jsonResponse(await wpGetSettings(args.search));
-        
+
       case "wp_woo_products":
         return jsonResponse(await wpWooProducts(args.status, args.count));
-        
+
       case "wp_woo_orders":
         return jsonResponse(await wpWooOrders(args.status, args.count));
-        
+
       case "wp_get_terms":
         return jsonResponse(await wpGetTerms(args.taxonomy, args.count, args.search));
-        
+
       case "wp_get_post_types":
         return jsonResponse(await wpGetPostTypes());
-        
+
       case "wp_get_taxonomies":
         return jsonResponse(await wpGetTaxonomies());
+
+      // 8. Multi-Editor Switchboard
+      case "get_gutenberg_scaffold":
+        return jsonResponse(getGutenbergScaffold(args.blockName, { namespace: args.namespace, category: args.category }));
+
+      case "get_elementor_scaffold":
+        return jsonResponse(getElementorScaffold(args.widgetName, { category: args.category }));
+
+      case "get_divi_scaffold":
+        return jsonResponse(getDiviScaffold(args.moduleName));
+
+      case "get_wpbakery_scaffold":
+        return jsonResponse(getWPBakeryScaffold(args.shortcodeName));
+
+      case "get_editor_comparison":
+        return jsonResponse(getEditorComparison());
+
+      case "get_builder_css_vars":
+        return jsonResponse(getBuilderCSSVariables(args.builder));
+
+      // 9. WooCommerce Enterprise
+      case "get_subscriptions_guide":
+        return jsonResponse(getSubscriptionsGuide());
+
+      case "get_multivendor_guide":
+        return jsonResponse(getMultiVendorGuide());
+
+      case "get_product_addons_guide":
+        return jsonResponse(getProductAddonsGuide());
+
+      case "get_import_export_guide":
+        return jsonResponse(getImportExportGuide());
+
+      case "get_hpos_guide":
+        return jsonResponse(getHPOSGuide());
+
+      // 10. Figma-to-Code Engine
+      case "extract_figma_tokens":
+        return jsonResponse(extractFigmaTokens(args.figmaData));
+
+      case "generate_theme_json":
+        return jsonResponse(generateThemeJson(args.tokens));
+
+      case "generate_block_from_figma":
+        return jsonResponse(generateBlockFromFigma(args.figmaComponent, args.blockName));
+
+      case "detect_component_type":
+        return jsonResponse(detectComponentType(args.figmaNode));
+
+      // 11. Testing & CI/CD
+      case "get_phpunit_config":
+        return jsonResponse(getPhpUnitConfig());
+
+      case "get_pest_config":
+        return jsonResponse(getPestConfig());
+
+      case "get_wpmock_setup":
+        return jsonResponse(getWPMockSetup());
+
+      case "get_playwright_setup":
+        return jsonResponse(getPlaywrightSetup());
+
+      case "get_github_actions_workflow":
+        return jsonResponse(getGitHubActionsWorkflow());
 
       default:
         throw new Error(`Unknown tool: ${name}`);
@@ -529,10 +791,16 @@ async function run() {
   await server.connect(transport);
   console.error("[WP-MCP] Server initialized and listening on stdio.");
 
-  const DASHBOARD_PORT = 5174;
-  httpServer.listen(DASHBOARD_PORT, () => {
-    console.error(`[WP-MCP] Dashboard running on http://localhost:${DASHBOARD_PORT}`);
-  });
+  // Dashboard disabled by default for MCP Studio compatibility
+  // To enable dashboard: set WP_MCP_ENABLE_DASHBOARD=1
+  const enableDashboard = process.env.WP_MCP_ENABLE_DASHBOARD === '1';
+
+  if (enableDashboard) {
+    const DASHBOARD_PORT = process.env.WP_MCP_DASHBOARD_PORT || 5175;
+    httpServer.listen(DASHBOARD_PORT, () => {
+      console.error(`[WP-MCP] Dashboard running on http://localhost:${DASHBOARD_PORT}`);
+    });
+  }
 }
 
 run().catch((error) => {

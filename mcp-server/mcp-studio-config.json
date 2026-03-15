@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "wp-mcp-server": {
+      "command": "node",
+      "args": [
+        "c:/wamp64/www/wp-agent/mcp-server/server.js"
+      ],
+      "env": {
+        "WP_MCP_STUDIO": "1"
+      }
+    }
+  }
+}

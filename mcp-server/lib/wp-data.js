@@ -24,15 +24,15 @@ async function runCliJson(command, args = '') {
   try {
     const fullCommand = `php "${WP_CLI_PATH}" ${command} ${args} --format=json --path="${WP_PATH}" --allow-root`;
     const { stdout, stderr } = await execAsync(fullCommand);
-    
+
     if (stderr && !stdout) {
       return { error: stderr.trim() };
     }
-    
+
     if (!stdout.trim()) {
       return [];
     }
-    
+
     return JSON.parse(stdout);
   } catch (error) {
     return { error: `WP-CLI Execution failed: ${error.message}` };
@@ -68,21 +68,34 @@ export async function wpGetUsers(role = '', count = 10, search = '') {
  */
 export async function wpGetSettings(search = '') {
   const searchArg = search ? `--search="${search}"` : '';
-  return runCliJson('option list', `--autoload=yes --per_page=20 ${searchArg}`);
+  // option list doesn't support --number, use --format=json and limit in code if needed
+  return runCliJson('option list', `--autoload=yes ${searchArg}`);
 }
 
 /**
  * Fetch WooCommerce Products.
+ * Returns error if WooCommerce is not installed.
  */
 export async function wpWooProducts(status = 'publish', count = 10) {
-  return runCliJson('wc product list', `--status="${status}" --per_page=${count}`);
+  const result = await runCliJson('wc product list', `--status="${status}" --number=${count}`);
+  // If wc command not found, provide helpful message
+  if (result.error && result.error.includes("'wc' is not a registered wp command")) {
+    return { error: 'WooCommerce CLI not available. Ensure WooCommerce plugin is installed and active.' };
+  }
+  return result;
 }
 
 /**
  * Fetch WooCommerce Orders.
+ * Returns error if WooCommerce is not installed.
  */
 export async function wpWooOrders(status = 'any', count = 10) {
-  return runCliJson('wc order list', `--status="${status}" --per_page=${count}`);
+  const result = await runCliJson('wc order list', `--status="${status}" --number=${count}`);
+  // If wc command not found, provide helpful message
+  if (result.error && result.error.includes("'wc' is not a registered wp command")) {
+    return { error: 'WooCommerce CLI not available. Ensure WooCommerce plugin is installed and active.' };
+  }
+  return result;
 }
 
 /**

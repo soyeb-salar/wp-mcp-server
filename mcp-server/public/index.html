@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WP-MCP Server Dashboard</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
     <div class="dashboard-container">
         <!-- Sidebar -->
@@ -23,46 +28,323 @@
             </div>
 
             <div class="sidebar-content">
-                <div class="stats-card">
-                    <h3>Total Requests</h3>
-                    <div class="stat-value" id="total-requests">0</div>
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="mini-stat-card">
+                        <div class="mini-stat-icon">📊</div>
+                        <div class="mini-stat-info">
+                            <span class="mini-stat-value" id="total-requests">0</span>
+                            <span class="mini-stat-label">Total Requests</span>
+                        </div>
+                    </div>
+                    <div class="mini-stat-card">
+                        <div class="mini-stat-icon">⚡</div>
+                        <div class="mini-stat-info">
+                            <span class="mini-stat-value" id="avg-response-time">0ms</span>
+                            <span class="mini-stat-label">Avg Response</span>
+                        </div>
+                    </div>
+                    <div class="mini-stat-card">
+                        <div class="mini-stat-icon">✅</div>
+                        <div class="mini-stat-info">
+                            <span class="mini-stat-value" id="success-rate">100%</span>
+                            <span class="mini-stat-label">Success Rate</span>
+                        </div>
+                    </div>
+                    <div class="mini-stat-card">
+                        <div class="mini-stat-icon">🔥</div>
+                        <div class="mini-stat-info">
+                            <span class="mini-stat-value" id="requests-per-minute">0</span>
+                            <span class="mini-stat-label">Req/Min</span>
+                        </div>
+                    </div>
                 </div>
-                
+
+                <!-- Top Tools -->
                 <div class="tools-list-container">
-                    <h3>Recent Tools</h3>
+                    <h3>🏆 Top Tools</h3>
                     <ul class="tools-list" id="recent-tools-list">
                         <!-- Populated by JS -->
                     </ul>
                 </div>
+
+                <!-- Recent Activity Timeline -->
+                <div class="tools-list-container">
+                    <h3>📈 Activity Timeline</h3>
+                    <div class="timeline-container" id="activity-timeline">
+                        <!-- Timeline items -->
+                    </div>
+                </div>
             </div>
-            
+
             <div class="sidebar-footer">
                 <p>Port: 5174 | Standard IO</p>
-                <button class="clear-btn" id="clear-logs-btn">Clear Logs</button>
+                <div class="footer-actions">
+                    <button class="action-btn" id="export-logs-btn">📥 Export</button>
+                    <button class="action-btn danger" id="clear-logs-btn">🗑️ Clear</button>
+                </div>
             </div>
         </aside>
 
-        <!-- Main Content (Activity Feed) -->
+        <!-- Main Content -->
         <main class="main-content">
-            <header class="main-header">
-                <h2>Live Activity Feed</h2>
-                <div class="filter-controls">
-                    <input type="text" id="search-logs" placeholder="Search logs..." class="search-input">
+            <!-- Dashboard Header -->
+            <header class="dashboard-header">
+                <div class="header-left">
+                    <h2>🎯 Live Dashboard</h2>
+                    <span class="subtitle">Real-time MCP Server Monitoring</span>
+                </div>
+                <div class="header-right">
+                    <div class="filter-controls">
+                        <select id="filter-type" class="filter-select">
+                            <option value="all">All Types</option>
+                            <option value="call">Calls</option>
+                            <option value="success">Success</option>
+                            <option value="error">Errors</option>
+                        </select>
+                        <input type="text" id="search-logs" placeholder="Search logs..." class="search-input">
+                    </div>
+                    <div class="view-toggles">
+                        <button class="view-toggle active" data-view="feed">📋 Feed</button>
+                        <button class="view-toggle" data-view="analytics">📊 Analytics</button>
+                        <button class="view-toggle" data-view="prompts">📚 Prompts Library</button>
+                        <button class="view-toggle" data-view="custom">💻 Developer Prompts</button>
+                    </div>
                 </div>
             </header>
-            
+
+            <!-- Analytics View -->
+            <div class="analytics-view" id="analytics-view" style="display: none;">
+                <!-- Charts Row 1 -->
+                <div class="charts-row">
+                    <div class="chart-card large">
+                        <div class="chart-header">
+                            <h3>📈 Requests Over Time</h3>
+                            <select id="time-range" class="time-range-select">
+                                <option value="1m">Last 1 Minute</option>
+                                <option value="5m" selected>Last 5 Minutes</option>
+                                <option value="15m">Last 15 Minutes</option>
+                                <option value="1h">Last Hour</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="requests-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>🔧 Tool Usage Distribution</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="tool-distribution-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 2 -->
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>⏱️ Response Time Distribution</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="response-time-chart"></canvas>
+                        </div>
+                        <div class="chart-stats">
+                            <div class="chart-stat">
+                                <span class="stat-label">Min</span>
+                                <span class="stat-value" id="rt-min">0ms</span>
+                            </div>
+                            <div class="chart-stat">
+                                <span class="stat-label">Avg</span>
+                                <span class="stat-value" id="rt-avg">0ms</span>
+                            </div>
+                            <div class="chart-stat">
+                                <span class="stat-label">Max</span>
+                                <span class="stat-value" id="rt-max">0ms</span>
+                            </div>
+                            <div class="chart-stat">
+                                <span class="stat-label">P95</span>
+                                <span class="stat-value" id="rt-p95">0ms</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>📊 Success vs Errors</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="success-error-chart"></canvas>
+                        </div>
+                        <div class="chart-stats">
+                            <div class="chart-stat">
+                                <span class="stat-label">Success</span>
+                                <span class="stat-value success" id="success-count">0</span>
+                            </div>
+                            <div class="chart-stat">
+                                <span class="stat-label">Errors</span>
+                                <span class="stat-value error" id="error-count">0</span>
+                            </div>
+                            <div class="chart-stat">
+                                <span class="stat-label">Success Rate</span>
+                                <span class="stat-value" id="success-rate-detail">100%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>🏷️ Category Breakdown</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="category-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="metrics-card">
+                    <div class="metrics-header">
+                        <h3>🚀 Performance Metrics</h3>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <div class="metric-icon">📡</div>
+                            <div class="metric-info">
+                                <span class="metric-label">Total API Calls</span>
+                                <span class="metric-value" id="metric-total-calls">0</span>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">💾</div>
+                            <div class="metric-info">
+                                <span class="metric-label">Knowledge Base Queries</span>
+                                <span class="metric-value" id="metric-kb-queries">0</span>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">🔐</div>
+                            <div class="metric-info">
+                                <span class="metric-label">Validation Checks</span>
+                                <span class="metric-value" id="metric-validations">0</span>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">📦</div>
+                            <div class="metric-info">
+                                <span class="metric-label">WP Data Fetches</span>
+                                <span class="metric-value" id="metric-wp-data">0</span>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">🎯</div>
+                            <div class="metric-info">
+                                <span class="metric-label">Unique Tools Used</span>
+                                <span class="metric-value" id="metric-unique-tools">0</span>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon">📊</div>
+                            <div class="metric-info">
+                                <span class="metric-label">Data Processed</span>
+                                <span class="metric-value" id="metric-data-size">0 KB</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prompts Library View -->
+            <div class="prompts-view" id="prompts-view" style="display: none;">
+                <div class="prompts-header">
+                    <div class="prompts-intro">
+                        <h3>📚 MCP Prompts Library</h3>
+                        <p>Copy and paste these prompts directly into your AI assistant (Claude, Cursor, Windsurf) to
+                            use WP-MCP Server tools effectively.</p>
+                    </div>
+                    <div class="prompts-actions">
+                        <input type="text" id="search-prompts" placeholder="Search prompts..."
+                            class="search-input prompts-search">
+                        <select id="filter-category" class="filter-select prompts-filter">
+                            <option value="all">All Categories</option>
+                            <option value="knowledge">📖 Knowledge Base</option>
+                            <option value="checklist">✅ Checklists</option>
+                            <option value="snippet">💡 Code Snippets</option>
+                            <option value="validation">🔍 Validation</option>
+                            <option value="agent">🤖 Agent Skills</option>
+                            <option value="action">⚡ Actions</option>
+                            <option value="wordpress">🔵 WordPress Data</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="prompts-grid" id="prompts-grid">
+                    <!-- Prompts will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Custom Developer Prompts View -->
+            <div class="custom-prompts-view" id="custom-prompts-view" style="display: none;">
+                <div class="custom-prompts-header">
+                    <div class="custom-prompts-intro">
+                        <h3>💻 Advanced Developer Prompts</h3>
+                        <p>Professional-grade prompts for developers. These advanced prompts combine multiple MCP tools
+                            to maximize productivity and generate production-ready WordPress code.</p>
+                    </div>
+                    <div class="custom-prompts-actions">
+                        <input type="text" id="search-custom-prompts" placeholder="Search developer prompts..."
+                            class="search-input prompts-search">
+                        <select id="filter-custom-category" class="filter-select prompts-filter">
+                            <option value="all">All Categories</option>
+                            <option value="plugin">🔌 Plugin Development</option>
+                            <option value="block">🧩 Gutenberg Blocks</option>
+                            <option value="woocommerce">🛍️ WooCommerce</option>
+                            <option value="woocommerce-enterprise">🏪 Woo Enterprise</option>
+                            <option value="rest-api">🔌 REST API</option>
+                            <option value="security">🔒 Security</option>
+                            <option value="performance">⚡ Performance</option>
+                            <option value="database">💾 Database</option>
+                            <option value="testing">🧪 Testing</option>
+                            <option value="multi-editor">🎨 Multi-Editor</option>
+                            <option value="figma-to-code">🎨 Figma-to-Code</option>
+                            <option value="theme">🎨 Theme Dev</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="custom-prompts-container" id="custom-prompts-container">
+                    <!-- Custom prompts will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Activity Feed View -->
             <div class="activity-feed" id="activity-feed">
                 <!-- Log entries will be prepended here -->
                 <div class="empty-state" id="empty-state">
                     <span class="empty-icon">📡</span>
-                    <p>Waiting for MCP tool calls...</p>
+                    <h3>Waiting for MCP tool calls...</h3>
+                    <p>Tool calls will appear here in real-time</p>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- Tool Call Modal -->
+    <div class="modal" id="tool-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Tool Details</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
     <!-- Socket.io connection -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="developer-prompts.js"></script>
     <script src="script.js"></script>
 </body>
+
 </html>

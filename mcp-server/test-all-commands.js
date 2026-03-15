@@ -3,6 +3,7 @@ import { listAgentSkills, getAgentSkill } from './lib/agent-skills.js';
 import { searchKnowledge } from './lib/search.js';
 import { getSecurityChecklist } from './lib/checklists.js';
 import { listSections } from './lib/parser.js';
+import fs from 'fs';
 
 async function runTests() {
   const results = [];
@@ -44,7 +45,16 @@ async function runTests() {
   await runPhase("searchKnowledge('security')", async () => searchKnowledge('security'));
   await runPhase("listSections", async () => listSections());
   await runPhase("getSecurityChecklist", async () => getSecurityChecklist());
-  import fs from 'fs';
+
+  // Mark WooCommerce tests as SKIPPED if not available
+  const wooResults = results.filter(r => r.name === 'wpWooProducts' || r.name === 'wpWooOrders');
+  wooResults.forEach(r => {
+    if (r.status === 'FAILED' && r.error.includes('WooCommerce CLI not available')) {
+      r.status = 'SKIPPED';
+      r.error = 'WooCommerce not installed (run: wp plugin install woocommerce --activate)';
+    }
+  });
+
   fs.writeFileSync('test-report.json', JSON.stringify(results, null, 2));
   console.log("Test report saved to test-report.json");
 }
